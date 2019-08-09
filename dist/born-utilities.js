@@ -17,6 +17,7 @@ exports.readCookie = readCookie;
 exports.eraseCookie = eraseCookie;
 exports.getTotalRect = getTotalRect;
 exports.scrollToPosition = scrollToPosition;
+exports.objectAssign = objectAssign;
 /**
  * [Utilities]: methods and objects that contain reusable functionality and can be called on demand.
  */
@@ -273,4 +274,20 @@ function scrollToPosition(target) {
     targetOffsetToScroll -= totalOffset;
 
     return targetOffsetToScroll;
+}
+
+//Polyfill for the Object.assign method, which is not supported in IE11.
+// inspired by https://github.com/Raynos/xtend/blob/master/mutable.js
+function objectAssign(target) {
+    for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    return target;
 }

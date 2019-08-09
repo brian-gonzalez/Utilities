@@ -259,3 +259,19 @@ export function scrollToPosition (target, offset = 0) {
 
     return targetOffsetToScroll;
 }
+
+//Polyfill for the Object.assign method, which is not supported in IE11.
+// inspired by https://github.com/Raynos/xtend/blob/master/mutable.js
+export function objectAssign(target) {
+    for (let i = 1; i < arguments.length; i++) {
+        let source = arguments[i];
+
+        for (let key in source) {
+            if (source.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    return target;
+}
