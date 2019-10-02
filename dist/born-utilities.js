@@ -18,6 +18,7 @@ exports.eraseCookie = eraseCookie;
 exports.getTotalRect = getTotalRect;
 exports.scrollToPosition = scrollToPosition;
 exports.objectAssign = objectAssign;
+exports.forceFocus = forceFocus;
 /**
  * [Utilities]: methods and objects that contain reusable functionality and can be called on demand.
  */
@@ -290,4 +291,17 @@ function objectAssign(target) {
     }
 
     return target;
+}
+
+/**
+ * Attemps to add focus to a `focusTarget` until it is able to.
+ */
+function forceFocus(focusTarget) {
+    var focusInterval = window.setInterval(function () {
+        focusTarget.focus();
+
+        if (focusTarget.matches(':focus')) {
+            window.clearInterval(focusInterval);
+        }
+    }, 100);
 }

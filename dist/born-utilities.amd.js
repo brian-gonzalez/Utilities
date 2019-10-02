@@ -16,6 +16,7 @@ define(['exports'], function (exports) {
     exports.getTotalRect = getTotalRect;
     exports.scrollToPosition = scrollToPosition;
     exports.objectAssign = objectAssign;
+    exports.forceFocus = forceFocus;
 
     var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
         return typeof obj;
@@ -295,5 +296,18 @@ define(['exports'], function (exports) {
         }
 
         return target;
+    }
+
+    /**
+     * Attemps to add focus to a `focusTarget` until it is able to.
+     */
+    function forceFocus(focusTarget) {
+        var focusInterval = window.setInterval(function () {
+            focusTarget.focus();
+
+            if (focusTarget.matches(':focus')) {
+                window.clearInterval(focusInterval);
+            }
+        }, 100);
     }
 });
