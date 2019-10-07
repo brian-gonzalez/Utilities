@@ -288,5 +288,5 @@ export function forceFocus(focusTarget) {
         } else {
             focusTarget.focus();
         }
-    }, 100);
+    }, 25);
 }

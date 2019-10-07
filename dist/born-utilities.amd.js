@@ -310,6 +310,6 @@ define(['exports'], function (exports) {
             } else {
                 focusTarget.focus();
             }
-        }, 100);
+        }, 25);
     }
 });
