@@ -276,13 +276,17 @@ export function objectAssign(target) {
     return target;
 }
 
+let focusInterval;
+
 /**
  * Attemps to add focus to a `focusTarget` until it is able to.
  */
 export function forceFocus(focusTarget) {
     focusTarget.focus();
 
-    let focusInterval = window.setInterval(function() {
+    window.clearInterval(focusInterval);
+
+    focusInterval = window.setInterval(function() {
         if (focusTarget.matches(':focus')) {
             window.clearInterval(focusInterval);
         } else {
