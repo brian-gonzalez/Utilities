@@ -12,13 +12,14 @@ exports.createElWithAttrs = createElWithAttrs;
 exports.callbackOnElements = callbackOnElements;
 exports.getUrlParameter = getUrlParameter;
 exports.hasURLParameter = hasURLParameter;
-exports.createCookie = createCookie;
-exports.readCookie = readCookie;
-exports.eraseCookie = eraseCookie;
 exports.getTotalRect = getTotalRect;
 exports.scrollToPosition = scrollToPosition;
 exports.objectAssign = objectAssign;
+exports.createCookie = createCookie;
+exports.readCookie = readCookie;
+exports.eraseCookie = eraseCookie;
 exports.forceFocus = forceFocus;
+exports.focusTrap = focusTrap;
 /**
  * [Utilities]: methods and objects that contain reusable functionality and can be called on demand.
  */
@@ -188,6 +189,57 @@ function hasURLParameter(name) {
 }
 
 /**
+ * Adds the specified getBoundingClientRect()[`property`] from each node found in `elements`.
+ * @return {Integer}          [description]
+ */
+function getTotalRect(elements, property) {
+    var totalOffsetHeight = 0;
+
+    callbackOnElements(elements, function (currentEl) {
+        totalOffsetHeight += currentEl.getBoundingClientRect()[property || 'height'];
+    });
+
+    return totalOffsetHeight;
+}
+
+/**
+ * Returns the target relative to the current window scroll position.
+ * @param  {HTMLElement | HTML Selector | Number} target [Target element(s) or position value to scroll to]
+ * @param  {HTMLElement | NodeList | HTML Selector | Number} offset [Offset element to calculate the height from, or offset value to substract]
+ */
+function scrollToPosition(target) {
+    var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+    var documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
+        documentScrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop,
+        windowHeight = document.documentElement.clientHeight,
+        totalOffset = typeof offset === 'number' ? offset : getTotalRect(offset),
+        targetOffset = typeof target === 'number' ? target : getTotalRect(target, 'top') + documentScrollTop,
+        targetOffsetToScroll = Math.round(documentHeight - targetOffset < windowHeight ? documentHeight - windowHeight : targetOffset);
+
+    //Remove manual offset from target position.
+    targetOffsetToScroll -= totalOffset;
+
+    return targetOffsetToScroll;
+}
+
+//Polyfill for the Object.assign method, which is not supported in IE11.
+// inspired by https://github.com/Raynos/xtend/blob/master/mutable.js
+function objectAssign(target) {
+    for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    return target;
+}
+
+/**
  * [createCookie creates a cookie]
  * @param  {[string]} name  [cookie name]
  * @param  {[string]} value [cookie description]
@@ -242,57 +294,6 @@ function eraseCookie(name) {
     createCookie(name, '', -1);
 }
 
-/**
- * Adds the specified getBoundingClientRect()[`property`] from each node found in `elements`.
- * @return {Integer}          [description]
- */
-function getTotalRect(elements, property) {
-    var totalOffsetHeight = 0;
-
-    callbackOnElements(elements, function (currentEl) {
-        totalOffsetHeight += currentEl.getBoundingClientRect()[property || 'height'];
-    });
-
-    return totalOffsetHeight;
-}
-
-/**
- * Returns the target relative to the current window scroll position.
- * @param  {HTMLElement | HTML Selector | Number} target [Target element(s) or position value to scroll to]
- * @param  {HTMLElement | NodeList | HTML Selector | Number} offset [Offset element to calculate the height from, or offset value to substract]
- */
-function scrollToPosition(target) {
-    var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-
-    var documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
-        documentScrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop,
-        windowHeight = document.documentElement.clientHeight,
-        totalOffset = typeof offset === 'number' ? offset : getTotalRect(offset),
-        targetOffset = typeof target === 'number' ? target : getTotalRect(target, 'top') + documentScrollTop,
-        targetOffsetToScroll = Math.round(documentHeight - targetOffset < windowHeight ? documentHeight - windowHeight : targetOffset);
-
-    //Remove manual offset from target position.
-    targetOffsetToScroll -= totalOffset;
-
-    return targetOffsetToScroll;
-}
-
-//Polyfill for the Object.assign method, which is not supported in IE11.
-// inspired by https://github.com/Raynos/xtend/blob/master/mutable.js
-function objectAssign(target) {
-    for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-
-        for (var key in source) {
-            if (source.hasOwnProperty(key)) {
-                target[key] = source[key];
-            }
-        }
-    }
-
-    return target;
-}
-
 var focusInterval = void 0;
 
 /**
@@ -310,4 +311,52 @@ function forceFocus(focusTarget) {
             focusTarget.focus();
         }
     }, 25);
+}
+
+/**
+ * Traps keyboard focus in a designated `containerEl`.
+ */
+function focusTrap(containerEl) {
+    var focusableEls = {};
+
+    if (!containerEl.dataset.focustrapEnabled) {
+        containerEl.dataset.focustrapEnabled = true;
+        containerEl.addEventListener('focusin', _focusinHandler);
+        containerEl.addEventListener('keydown', _tabbingHandler);
+    }
+
+    /**
+     * Updates the "focusable" element values whenever a child of `containerEl` recives focus.
+     */
+    function _focusinHandler(evt) {
+        //Refresh the focusable elements list whenever something gains focus.
+        //This ensures the list is up to date in case the contents of the `containerEl` change.
+        focusableEls.list = this.querySelectorAll('button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])');
+
+        focusableEls.first = focusableEls.list[0];
+        focusableEls.last = focusableEls.list[focusableEls.list.length - 1];
+
+        focusableEls.loopTo = null;
+
+        //Set the `focusableEls.loopTo` value depending on the currently focused element.
+        //`focusableEls.loopTo` will be equal to the `focusableEls.first` whenever the `focusableEls.last` receives focus, and viceversa.
+        if (evt.target === focusableEls.last) {
+            focusableEls.loopTo = focusableEls.first;
+        } else if (evt.target === focusableEls.first) {
+            focusableEls.loopTo = focusableEls.last;
+        }
+    }
+
+    /**
+     * Listens to the keyboard Tab press and shifts focus to the first/last focusable element.
+     */
+    function _tabbingHandler(evt) {
+        var loopToFirstEl = focusableEls.loopTo === focusableEls.first && !evt.shiftKey,
+            loopToLastEl = focusableEls.loopTo === focusableEls.last && evt.shiftKey;
+
+        if (evt.keyCode === 9 && focusableEls.loopTo && (loopToFirstEl || loopToLastEl)) {
+            evt.preventDefault();
+            focusableEls.loopTo.focus();
+        }
+    }
 }
