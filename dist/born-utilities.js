@@ -20,6 +20,7 @@ exports.readCookie = readCookie;
 exports.eraseCookie = eraseCookie;
 exports.forceFocus = forceFocus;
 exports.focusTrap = focusTrap;
+exports.parseScripts = parseScripts;
 /**
  * [Utilities]: methods and objects that contain reusable functionality and can be called on demand.
  */
@@ -359,4 +360,21 @@ function focusTrap(containerEl) {
             focusableEls.loopTo.focus();
         }
     }
+}
+
+/**
+ * Parses and executes any scripts found within the provided `containerEl` element.
+ * @param  {HTMLElement} containerEl [description]
+ */
+function parseScripts(containerEl) {
+    [].forEach.call(containerEl.querySelectorAll('script'), function (oldScript) {
+        var newScript = document.createElement('script');
+
+        Array.from(oldScript.attributes).forEach(function (attr) {
+            return newScript.setAttribute(attr.name, attr.value);
+        });
+
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
 }

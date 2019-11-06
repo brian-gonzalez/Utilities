@@ -18,6 +18,7 @@ define(['exports'], function (exports) {
     exports.eraseCookie = eraseCookie;
     exports.forceFocus = forceFocus;
     exports.focusTrap = focusTrap;
+    exports.parseScripts = parseScripts;
 
     var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
         return typeof obj;
@@ -364,5 +365,22 @@ define(['exports'], function (exports) {
                 focusableEls.loopTo.focus();
             }
         }
+    }
+
+    /**
+     * Parses and executes any scripts found within the provided `containerEl` element.
+     * @param  {HTMLElement} containerEl [description]
+     */
+    function parseScripts(containerEl) {
+        [].forEach.call(containerEl.querySelectorAll('script'), function (oldScript) {
+            var newScript = document.createElement('script');
+
+            Array.from(oldScript.attributes).forEach(function (attr) {
+                return newScript.setAttribute(attr.name, attr.value);
+            });
+
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
     }
 });

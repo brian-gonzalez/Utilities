@@ -342,3 +342,18 @@ export function focusTrap(containerEl) {
         }
     }
 }
+
+/**
+ * Parses and executes any scripts found within the provided `containerEl` element.
+ * @param  {HTMLElement} containerEl [description]
+ */
+export function parseScripts(containerEl) {
+    [].forEach.call(containerEl.querySelectorAll('script'), function(oldScript) {
+        const newScript = document.createElement('script');
+
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+}
