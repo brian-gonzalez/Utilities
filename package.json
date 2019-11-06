@@ -1,6 +1,6 @@
 {
   "name": "@borngroup/born-utilities",
-  "version": "2.4.6",
+  "version": "2.5.0",
   "description": "Set of useful utilities for BORN projects.",
   "main": "dist/born-utilities.min.js",
   "scripts": {
