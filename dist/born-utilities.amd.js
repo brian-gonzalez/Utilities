@@ -215,10 +215,11 @@ define(['exports'], function (exports) {
      */
     function scrollToPosition(target) {
         var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var scrollContainer = arguments[2];
 
-        var documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
-            documentScrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop,
-            windowHeight = document.documentElement.clientHeight,
+        var documentHeight = scrollContainer ? scrollContainer.scrollHeight : Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
+            documentScrollTop = scrollContainer ? scrollContainer.scrollTop : window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop,
+            windowHeight = scrollContainer ? scrollContainer.offsetHeight : document.documentElement.clientHeight,
             totalOffset = typeof offset === 'number' ? offset : getTotalRect(offset),
             targetOffset = typeof target === 'number' ? target : getTotalRect(target, 'top') + documentScrollTop,
             targetOffsetToScroll = Math.round(documentHeight - targetOffset < windowHeight ? documentHeight - windowHeight : targetOffset);
