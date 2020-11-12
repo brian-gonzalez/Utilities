@@ -141,7 +141,9 @@ define(['exports'], function (exports) {
         }
 
         if (textContent) {
-            el.textContent = textContent;
+            el.textContent = '';
+
+            el.insertAdjacentHTML('afterbegin', textContent);
         }
 
         if (appendTarget) {

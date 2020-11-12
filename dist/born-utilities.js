@@ -136,7 +136,9 @@ function createElWithAttrs(appendTarget, attributes, type, textContent) {
     }
 
     if (textContent) {
-        el.textContent = textContent;
+        el.textContent = '';
+
+        el.insertAdjacentHTML('afterbegin', textContent);
     }
 
     if (appendTarget) {
